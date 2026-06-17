@@ -3,130 +3,616 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ILA Leoben | Industrial Logistics Association</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <title>Genetischer Algorithmus - Damen-Problem</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .hero-industrial {
-            background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), 
-                        url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1920&q=80');
-            background-size: cover;
-            background-position: center;
+        :root {
+            --primary: #004D40;      
+            --secondary: #00796B;    
+            --accent: #FFB300;       
+            --dark: #1A252C;         
+            --light: #F8F9FA;        
+            --card-bg: #FFFFFF;
+            --border: #E2E8F0;
         }
-        .montan-gelb { background-color: #ffcc00; }
-        .montan-schwarz { background-color: #1a1a1a; }
-        .text-montan-gelb { color: #ffcc00; }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background-color: #0F172A;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--dark);
+            overflow: hidden;
+        }
+
+        /* 16:9 Slide Container */
+        .slide {
+            width: 1280px;
+            height: 720px;
+            background-color: var(--light);
+            position: absolute;
+            overflow: hidden;
+            display: none; /* Wird per JS gesteuert */
+            flex-direction: column;
+            padding: 60px 80px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        /* Header & Footer */
+        .slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 15px;
+            z-index: 10;
+        }
+
+        .slide-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 38px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .slide-subtitle {
+            font-size: 16px;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .slide-footer {
+            position: absolute;
+            bottom: 25px;
+            left: 80px;
+            right: 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #94A3B8;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+            z-index: 10;
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        /* Layout-Helfer */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; }
+        
+        /* Karten & Boxen */
+        .card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        
+        .card.accent-border { border-left: 6px solid var(--primary); }
+        .card h3 { color: var(--primary); margin-bottom: 15px; font-size: 22px; display: flex; align-items: center; gap: 10px; }
+
+        /* Listen-Styling */
+        ul { list-style: none; }
+        li { font-size: 18px; line-height: 1.6; margin-bottom: 12px; position: relative; padding-left: 28px; color: #334155; }
+        li::before {
+            content: "\f00c"; font-family: "Font Awesome 6 Free"; font-weight: 900;
+            position: absolute; left: 0; color: var(--secondary); font-size: 16px;
+        }
+        li.alert::before { content: "\f00d"; color: #EF4444; }
+        li.star::before { content: "\f005"; color: var(--accent); }
+
+        /* Zahlen-Highlights */
+        .stat-big { font-size: 72px; font-weight: 700; color: var(--primary); line-height: 1; margin-bottom: 5px; font-family: 'Playfair Display', serif; }
+        .stat-label { font-size: 16px; color: #64748B; font-weight: 500; }
+
+        /* Formel-Box */
+        .formula-box {
+            font-family: 'Fira Code', monospace;
+            background: #0F172A;
+            color: #38BDF8;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            margin: 15px 0;
+            border-left: 4px solid var(--accent);
+        }
+
+        /* Chessboard */
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            width: 360px;
+            height: 360px;
+            border: 4px solid var(--dark);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            margin: 0 auto;
+        }
+        .cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+        }
+        .cell.light { background-color: #F0D9B5; }
+        .cell.dark { background-color: #B58863; }
+        .cell i { color: #000; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+
+        /* Chart */
+        .chart-frame {
+            background: white; border: 1px solid var(--border); padding: 30px; border-radius: 12px; height: 350px; display: flex; flex-direction: column;
+        }
+        .chart-bars { flex: 1; display: flex; align-items: flex-end; gap: 40px; border-bottom: 2px solid #64748B; padding-bottom: 10px; }
+        .chart-bar-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; position: relative; }
+        .chart-bar { width: 100%; background: linear-gradient(180deg, var(--secondary), var(--primary)); border-radius: 6px 6px 0 0; position: relative; }
+        .chart-bar::after {
+            content: attr(data-value); position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-weight: 600; font-size: 14px;
+        }
+        .chart-label { font-size: 14px; font-weight: 600; color: #64748B; text-align: center; }
+
+        /* Title Slide */
+        .title-slide {
+            background: linear-gradient(135deg, #002D24 0%, #004D40 100%);
+            color: white;
+            justify-content: space-between;
+        }
+        .title-slide h1 { font-family: 'Playfair Display', serif; font-size: 56px; line-height: 1.1; margin-bottom: 15px; font-weight: 700; color: #FFFFFF; }
+        .title-slide h2 { font-size: 24px; color: var(--accent); font-weight: 500; margin-bottom: 40px; }
+        .title-slide .authors { display: flex; gap: 40px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 25px; }
+        .title-slide .author-card { font-size: 16px; color: #E2E8F0; line-height: 1.4; }
+        .title-slide .author-card strong { color: white; display: block; font-size: 18px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background-color: #F1F5F9; color: var(--primary); font-weight: 600; }
+
+        /* Keyboard Controls Hint */
+        .nav-hint {
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.6); color: white; padding: 6px 16px;
+            border-radius: 20px; font-size: 12px; pointer-events: none; letter-spacing: 0.5px;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-900">
+<body>
 
-    <nav class="bg-[#1a1a1a] text-white shadow-xl sticky top-0 z-50 border-b-2 border-[#ffcc00]">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 montan-gelb flex items-center justify-center rounded shadow-inner">
-                    <span class="text-black font-black text-xl">ILA</span>
-                </div>
-                <div class="text-xl font-extrabold tracking-tighter">
-                    Industrial Logistics Association <span class="text-montan-gelb">LEOBEN</span>
-                </div>
-            </div>
-            <div class="hidden md:flex space-x-8 font-semibold text-sm uppercase tracking-widest">
-                <a href="#" class="hover:text-montan-gelb transition">Events</a>
-                <a href="#" class="hover:text-montan-gelb transition">Netzwerk</a>
-                <a href="#" class="hover:text-montan-gelb transition">Über uns</a>
-                <a href="#" class="montan-gelb text-black px-4 py-2 rounded hover:bg-white transition">Mitglied werden</a>
-            </div>
+<div class="slide title-slide active">
+    <div style="margin-top: 40px;">
+        <span style="text-transform: uppercase; letter-spacing: 3px; color: var(--accent); font-weight: 600; font-size: 14px;">Montanuniversität Leoben | SS26</span>
+        <h1 style="margin-top: 15px;">Genetischer Algorithmus:<br>Damen-Problem</h1>
+        <h2>Optimierung der minimalen Abdeckung auf n &times; n Feldern</h2>
+    </div>
+    <div style="margin-bottom: 20px;">
+        <div style="font-size: 14px; color: #A7F3D0; margin-bottom: 10px; font-weight: 500; text-transform: uppercase;">Projektmitglieder & Ausarbeitung</div>
+        <div class="authors">
+            <div class="author-card"><strong>Christoph Moitzi</strong>m12422821</div>
+            <div class="author-card"><strong>Alexander Pilgram</strong>m01600948</div>
+            <div class="author-card"><strong>Eva Rischka</strong>m12401923</div>
         </div>
-    </nav>
+    </div>
+    <div class="nav-hint"><i class="fa-solid fa-arrows-left-right"></i> Nutze die Pfeiltasten zum Navigieren</div>
+</div>
 
-    <header class="hero-industrial h-[600px] flex items-center justify-center text-center text-white border-b-8 border-[#ffcc00]">
-        <div class="px-4 max-w-4xl">
-            <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tight">VOM CAMPUS IN DIE <span class="text-montan-gelb">LOGISTIK-WELT</span></h1>
-            <p class="text-xl md:text-2xl mb-10 text-gray-300 font-light">Der Verein für Industrielogistiker an der Montanuniversität Leoben. Wir verbinden Theorie, Praxis und Zukunft.</p>
-            <div class="flex flex-col md:flex-row justify-center gap-4">
-                <a href="#galerie" class="montan-gelb text-black font-bold py-4 px-10 rounded shadow-lg hover:scale-105 transition transform">Exkursionen ansehen</a>
-                <a href="#" class="border-2 border-white text-white font-bold py-4 px-10 rounded hover:bg-white hover:text-black transition">Unsere Partner</a>
-            </div>
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <div class="slide-title">Problemdefinition & Varianten</div>
+            <div class="slide-subtitle">Grundlagen der mathematischen Modellierung</div>
         </div>
-    </header>
-
-    <section class="py-20 container mx-auto px-6">
-        <div class="grid md:grid-cols-2 gap-16 items-center">
+        <i class="fa-solid fa-circle-info fa-2x" style="color: var(--secondary);"></i>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
             <div>
-                <h2 class="text-4xl font-bold mb-6 border-l-8 border-black pl-6">Das Netzwerk für <br><span class="text-gray-500">Studierende</span></h2>
-                <p class="text-gray-600 text-lg leading-relaxed mb-6">
-                    Der ILA Leoben ist die Schnittstelle zwischen der akademischen Ausbildung an der MUL und der internationalen Industrie. Wir fördern den Austausch, organisieren Fachvorträge und bringen dich direkt zu den Global Playern der Logistikbranche.
+                <p style="font-size: 20px; color: #475569; margin-bottom: 25px; line-height: 1.5;">
+                    Ziel ist das Auffinden einer Menge von Damen-Positionen $S$ mit <b>minimaler Kardinalität $|S|$</b>, sodass jedes Feld des $n \times n$ Bretts abgedeckt (besetzt oder bedroht) ist.
                 </p>
-                <ul class="space-y-3 font-semibold">
-                    <li class="flex items-center"><span class="text-montan-gelb mr-2">✔</span> Exklusive Firmenbesuche</li>
-                    <li class="flex items-center"><span class="text-montan-gelb mr-2">✔</span> Karriere-Support & Praktika</li>
-                </ul>
-            </div>
-            <div class="h-80 rounded-xl overflow-hidden shadow-lg bg-gray-200 flex items-center justify-center">
-                <img src="Teamfoto.jpeg" 
-                 alt="ILA Leoben Team" 
-                 class="w-full h-full object-cover"
-                 onerror="this.style.display='none'; this.parentNode.innerHTML='<p class=text-gray-500>Bild Teamfoto.jpeg nicht gefunden</p>'">
-            </div>
-        </div>
-    </section>
-
-    <section id="galerie" class="py-16 bg-[#1a1a1a]">
-        <div class="container mx-auto px-6">
-            <h2 class="text-white text-3xl font-bold mb-12 text-center uppercase tracking-widest">Einblicke & Aktivitäten</h2>
-            
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="group relative overflow-hidden rounded-lg shadow-2xl">
-                    <div class="montan-gelb aspect-[4/3] flex items-center justify-center transition group-hover:bg-yellow-400">
-                        <img src="https://via.placeholder.com/600x450/ffcc00/000000?text=Exkursion+1" alt="Event 1" class="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition">
-                    </div>
-                    <div class="absolute bottom-0 left-0 right-0 p-4 bg-black/60 text-white">
-                        <p class="font-bold">Industrie-Exkursion</p>
-                    </div>
+                <div class="card accent-border" style="margin-bottom: 20px;">
+                    <h3><i class="fa-solid fa-shield-halved"></i> Variante 1: Mit Bedrohung</h3>
+                    <p style="font-size: 16px; color: #475569;">Gegenseitige Bedrohung der gesetzten Damen ist vollkommen zulässig. Kriterium für Gültigkeit: Unbedeckte Felder = 0.</p>
                 </div>
-
-                <div class="group relative overflow-hidden rounded-lg shadow-2xl">
-                    <div class="montan-gelb aspect-[4/3] flex items-center justify-center transition group-hover:bg-yellow-400">
-                        <img src="https://via.placeholder.com/600x450/ffcc00/000000?text=Stammtisch" alt="Event 2" class="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition">
-                    </div>
-                    <div class="absolute bottom-0 left-0 right-0 p-4 bg-black/60 text-white">
-                        <p class="font-bold">Netzwerktreffen</p>
-                    </div>
+                <div class="card accent-border" style="border-left-color: var(--secondary);">
+                    <h3><i class="fa-solid fa-ban"></i> Variante 2: Ohne Bedrohung</h3>
+                    <p style="font-size: 16px; color: #475569;">Damen dürfen sich <u>nicht</u> gegenseitig bedrohen. Kriterien: Unbedeckte Felder = 0 <b>UND</b> Konflikte = 0.</p>
                 </div>
-
-                <div class="group relative overflow-hidden rounded-lg shadow-2xl">
-                    <div class="montan-gelb aspect-[4/3] flex items-center justify-center transition group-hover:bg-yellow-400">
-                        <img src="https://via.placeholder.com/600x450/ffcc00/000000?text=Workshop" alt="Event 3" class="object-cover w-full h-full opacity-80 group-hover:opacity-100 transition">
-                    </div>
-                    <div class="absolute bottom-0 left-0 right-0 p-4 bg-black/60 text-white">
-                        <p class="font-bold">Fachvorträge</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="bg-black text-gray-400 py-12 border-t-4 border-[#ffcc00]">
-        <div class="container mx-auto px-6 grid md:grid-cols-3 gap-12">
-            <div>
-                <h4 class="text-white font-bold text-lg mb-4">ILA - Industrielogistik</h4>
-                <p>Montanuniversität Leoben<br>Franz-Josef-Straße 18<br>8700 Leoben</p>
             </div>
             <div>
-                <h4 class="text-white font-bold text-lg mb-4">Quick Links</h4>
-                <ul class="space-y-2">
-                    <li><a href="#" class="hover:text-montan-gelb">Impressum</a></li>
-                    <li><a href="#" class="hover:text-montan-gelb">Datenschutz</a></li>
-                    <li><a href="#" class="hover:text-montan-gelb">Statuten</a></li>
-                </ul>
-            </div>
-            <div class="md:text-right">
-                <p class="text-sm">Glück Auf!</p>
-                <p class="text-white font-bold mt-2">&copy; 2026 ILA Leoben</p>
+                <div style="text-align: center; margin-bottom: 10px; font-weight: 600; color: var(--primary);">Visuelles Beispiel: n = 8 (Optimum = 5 Damen)</div>
+                <div class="chessboard">
+                    <div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div>
+                    <div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"><i class="fa-solid fa-chess-queen"></i></div><div class="cell light"></div>
+                    <div class="cell light"></div><div class="cell dark"></div><div class="cell light"><i class="fa-solid fa-chess-queen"></i></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div>
+                    <div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"><i class="fa-solid fa-chess-queen"></i></div><div class="cell dark"></div><div class="cell light"></div>
+                    <div class="cell light"></div><div class="cell dark"><i class="fa-solid fa-chess-queen"></i></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div>
+                    <div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div>
+                    <div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"><i class="fa-solid fa-chess-queen"></i></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div>
+                    <div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div><div class="cell dark"></div><div class="cell light"></div>
+                </div>
             </div>
         </div>
-    </footer>
+    </div>
+    <div class="slide-footer"><span>Mathematische Grundlagen des OR</span><span>Folie 2 / 11</span></div>
+</div>
+
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <div class="slide-title">Genetische Repräsentation & Mapping</div>
+            <div class="slide-subtitle">Wie die Software das Schachbrett "denkt"</div>
+        </div>
+        <i class="fa-solid fa-dna fa-2x" style="color: var(--secondary);"></i>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <div class="card accent-border" style="height: 100%;">
+                    <h3><i class="fa-solid fa-code"></i> Der Genotyp im Programm</h3>
+                    <p style="margin-bottom: 10px; font-size: 18px;">Das Board wird als ein <b>eindimensionales</b> primitives Array abgebildet:</p>
+                    <div class="formula-box">boolean[] chromosom = new boolean[n * n];</div>
+                    <ul>
+                        <li><b style="color: var(--primary);">true:</b> Eine Dame befindet sich auf diesem Feld.</li>
+                        <li><b style="color: #64748B;">false:</b> Das Feld ist leer.</li>
+                    </ul>
+                    <p style="margin-top: 20px; font-size: 16px; color: #475569; border-top: 1px solid #E2E8F0; padding-top: 15px;">
+                        <b>Der Mapping-Schlüssel im Code:</b>
+                    </p>
+                    <div class="formula-box" style="color: var(--accent); margin-top: 5px;">index = row * n + col;</div>
+                </div>
+            </div>
+            <div>
+                <div class="card" style="background-color: #F8FAFC; height: 100%;">
+                    <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Warum dieses Design?</h3>
+                    <ul style="margin-top: 10px;">
+                        <li><b>Dynamische Mengen:</b> Erlaubt eine völlig flexible, variable absolute Anzahl an Damen während der Evolution.</li>
+                        <li><b>Freie Anordnung:</b> Keine Einschränkungen bezüglich Vorab-Platzierungen pro Reihe.</li>
+                        <li><b>Performance:</b> Primitive 1D-Arrays minimieren Speicherbedarf und Rechenzeit bei massiven Mutationszyklen dramatisch.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span>Chromosom-Struktur</span><span>Folie 3 / 11</span></div>
+</div>
+
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <div class="slide-title">Die mathematischen Zielfunktionen</div>
+            <div class="slide-subtitle">Steuerung der Evolution über gestaffelte Strafterme</div>
+        </div>
+        <i class="fa-solid fa-calculator fa-2x" style="color: var(--secondary);"></i>
+    </div>
+    <div class="slide-content">
+        <p style="font-size: 18px; margin-bottom: 25px; color: #475569;">
+            Da es sich um ein <b>Minimierungsproblem</b> handelt, führt eine niedrigere Fitness zu höherer Überlebenswahrscheinlichkeit:
+        </p>
+        <div class="grid-2">
+            <div class="card accent-border">
+                <h3><i class="fa-solid fa-arrow-down-1-9"></i> Fitness-Funktion Variante 1</h3>
+                <div class="formula-box">fitness = unbedeckteFelder * n + anzahlDamen;</div>
+                <ul style="font-size: 16px; margin-top: 15px;">
+                    <li>Die Multiplikation der unbedeckten Felder mit der Brettgröße <tt>n</tt> sorgt dafür, dass die **vollständige Abdeckung** absolute Priorität besitzt.</li>
+                    <li>Ein einziges unbedecktes Feld bestraft das Individuum härter, als es eine zusätzliche Dame jemals könnte.</li>
+                </ul>
+            </div>
+            <div class="card accent-border" style="border-left-color: var(--secondary);">
+                <h3><i class="fa-solid fa-layer-group"></i> Fitness-Funktion Variante 2</h3>
+                <div class="formula-box">fitness = unbedeckteFelder * n² + konflikte * n + anzahlDamen;</div>
+                <ul style="font-size: 16px; margin-top: 15px;">
+                    <li>Hierarchische Dreistufigkeit: <b>Abdeckung ($n^2$) &gt; Konfliktfreiheit ($n$) &gt; Damenanzahl</b>.</li>
+                    <li>Der Algorithmus löst Ziele nacheinander: Erst das Brett füllen, dann Konflikte eliminieren, dann Damen wegrationalisieren.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span>Fitness-Logik</span><span>Folie 4 / 11</span></div>
+</div>
+
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <div class="slide-title">Algorithmen-Architektur & Operatoren</div>
+            <div class="slide-subtitle">Modulares Software-Design in Java</div>
+        </div>
+        <i class="fa-solid fa-gears fa-2x" style="color: var(--secondary);"></i>
+    </div>
+    <div class="slide-content">
+        <div class="grid-3">
+            <div class="card">
+                <div style="background: #ECEFF1; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                    <i class="fa-solid fa-users-viewfinder" style="color: var(--primary); font-size: 20px;"></i>
+                </div>
+                <h3>Selektion</h3>
+                <p style="font-size: 15px; color: #475569; line-height: 1.5;">Auswahl der Eltern-Chromosomen:</p>
+                <ul style="font-size: 14px; margin-top: 10px;">
+                    <li><b>TOURNAMENT:</b> Bestes Individuum aus $k=5$ zufälligen Kandidaten gewinnt.</li>
+                    <li><b>ROULETTE:</b> Wahrscheinlichkeit proportional zur inversen Fitness.</li>
+                </ul>
+            </div>
+            <div class="card">
+                <div style="background: #ECEFF1; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                    <i class="fa-solid fa-scissors" style="color: var(--primary); font-size: 20px;"></i>
+                </div>
+                <h3>Crossover</h3>
+                <p style="font-size: 15px; color: #475569; line-height: 1.5;">Rekombination der elterlichen Genstränge:</p>
+                <ul style="font-size: 14px; margin-top: 10px;">
+                    <li><b>ONE_POINT:</b> Schnitt an einer zufälligen Position des Arrays.</li>
+                    <li><b>TWO_POINT:</b> Tausch eines isolierten Mittelsegments.</li>
+                </ul>
+            </div>
+            <div class="card">
+                <div style="background: #ECEFF1; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                    <i class="fa-solid fa-bolt" style="color: var(--primary); font-size: 20px;"></i>
+                </div>
+                <h3>Mutation</h3>
+                <p style="font-size: 15px; color: #475569; line-height: 1.5;">Erhalt der genetischen Diversität:</p>
+                <ul style="font-size: 14px; margin-top: 10px;">
+                    <li><b>Bit-Flip:</b> Jedes Feld wird mit einer geringen Wahrscheinlichkeit (<tt>mutationRate</tt>) komplett invertiert (<tt>true &harr; false</tt>).</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span>Modulstruktur (`SelectionType`, `CrossoverType`)</span><span>Folie 5 / 11</span></div>
+</div>
+
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <div class="slide-title">Der heuristische Clou: Lokale Suche</div>
+            <div class="slide-subtitle">Verwandlung des GA in einen memetischen Algorithmus</div>
+        </div>
+        <i class="fa-solid fa-lightbulb fa-2x" style="color: var(--accent);"></i>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <h3>Die Methode <tt>entferneRedundanteDamen()</tt></h3>
+                <p style="font-size: 18px; line-height: 1.6; color: #334155; margin-bottom: 15px;">
+                    Eure wichtigste evolutionäre Stellschraube: Reine evolutionäre Mutation ist zu "blind", um exakt überflüssige Komponenten koordiniert zu löschen.
+                </p>
+                <div class="card accent-border" style="background-color: #F0FDF4; border-left-color: #22C55E;">
+                    <p style="font-size: 16px; font-weight: 500; color: #166534;">Der integrierte Heuristik-Schritt:</p>
+                    <ol style="margin-top: 10px; margin-left: 20px; font-size: 15px; color: #1E293B; line-height: 1.5;">
+                        <li>Nach der Mutation werden alle gesetzten Damen ermittelt.</li>
+                        <li>Diese Liste wird komplett <b>zufällig geshuffelt</b>.</li>
+                        <li>Jede Dame wird testweise vom Brett entfernt.</li>
+                        <li>Bleibt die Anzahl unbedeckter Felder weiterhin bei 0, wird das Entfernen fixiert.</li>
+                    </ol>
+                </div>
+            </div>
+            <div>
+                <div class="card" style="height: 100%;">
+                    <h3><i class="fa-solid fa-chart-line"></i> Effekt</h3>
+                    <ul>
+                        <li><b>Ausbrechen aus Plateaus:</b> Verhindert hocheffektiv das Feststecken in lokalen Optima.</li>
+                        <li><b>Greedy-Initialisierung (<tt>InitType</tt>):</b> Erzeugt sofort vollflächig bedeckte Boards. Der GA konzentriert sich danach primär auf das Ausdünnen mittels lokaler Suche.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span>Hybride Optimierungsstrategie</span><span>Folie 6 / 11</span></div>
+</div>
+
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <div class="slide-title">Statistische Auswertung: Gesamtüberblick</div>
+            <div class="slide-subtitle">Die empirischen Daten aus eurer `alle_runs.csv`</div>
+        </div>
+        <i class="fa-solid fa-chart-bar fa-2x" style="color: var(--secondary);"></i>
+    </div>
+    <div class="slide-content">
+        <div class="grid-3" style="text-align: center; margin-bottom: 40px;">
+            <div class="card">
+                <div class="stat-big">7.542</div>
+                <div class="stat-label">Durchgeführte Testläufe gesamt</div>
+            </div>
+            <div class="card">
+                <div class="stat-big" style="color: var(--secondary);">12,15%</div>
+                <div class="stat-label">Globale Erfolgsquote (916 Runs)</div>
+            </div>
+            <div class="card">
+                <div class="stat-big" style="color: #0369A1;">132,2s</div>
+                <div class="stat-label">Mittlere Rechenzeit pro Lauf</div>
+            </div>
+        </div>
+        <div class="card accent-border">
+            <h3><i class="fa-solid fa-arrow-up-right-dots"></i> Das Phänomen der bimodalen Konvergenz</h3>
+            <p style="font-size: 16px; line-height: 1.6; color: #334155;">
+                Ein Kernergebnis eurer Arbeit: Erfolgreiche Läufe weisen eine stark asymmetrische Verteilung auf. Während der <b>Mittelwert bei 348,6 Generationen</b> liegt, beträgt der <b>Median lediglich 21,0 Generationen</b>! 
+                <br><span style="color: var(--secondary); font-weight: 600;">Erkenntnis:</span> Entweder findet die Heuristik die Idealkombination direkt in den ersten Generationen, oder sie verfängt sich in langen Schleifen, die fast das gesamte Budget verzehren.
+            </p>
+        </div>
+    </div>
+    <div class="slide-footer"><span>Umfassende Performance-Analyse</span><span>Folie 7 / 11</span></div>
+</div>
+
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <div class="slide-title">Detailanalyse: Die Erfolgs-Instanz n = 16</div>
+            <div class="slide-subtitle">Warum Selektion und Initialisierung über Sieg oder Niederlage entscheiden</div>
+        </div>
+        <i class="fa-solid fa-magnifying-glass-chart fa-2x" style="color: var(--secondary);"></i>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <h3>Datenbasis: 3.120 Läufe (Erfolgsquote 28,8%)</h3>
+                <ul style="margin-top: 15px;">
+                    <li><b>Absolute Dominanz von Tournament:</b> Die Turnierselektion schlägt das Roulette-Rad um Längen (Erfolgsquote <b>ca. 41% vs. 16%</b>).</li>
+                    <li><b>Epische Beschleunigung:</b> Im Median konvergiert Tournament in 12–13 Generationen, Roulette benötigt gigantische 891–931 Generationen (~70-fache Geschwindigkeit!).</li>
+                    <li class="star"><b>Der Greedy-Vorteil:</b> Startpopulationen mit Greedy-Anteil erzielen 34–39% Erfolg. Reine Zufalls-Inits stagnieren bei schwachen 13%.</li>
+                </ul>
+            </div>
+            <div>
+                <div class="chart-frame">
+                    <div style="font-size: 15px; font-weight: 600; margin-bottom: 15px; color: var(--primary); text-align: center;">Erfolgsquote nach Selektionsart bei n = 16</div>
+                    <div class="chart-bars">
+                        <div class="chart-bar-wrapper">
+                            <div class="chart-bar" style="height: 120px;" data-value="16%"></div>
+                            <div class="chart-label">Roulette</div>
+                        </div>
+                        <div class="chart-bar-wrapper">
+                            <div class="chart-bar" style="height: 280px; background: linear-gradient(180deg, #F59E0B, var(--accent));" data-value="41%"></div>
+                            <div class="chart-label">Tournament (k=5)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span>Parameter-Vergleich n=16</span><span>Folie 8 / 11</span></div>
+</div>
+
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <div class="slide-title">Die Skalierungskrise (n = 18 bis n = 25)</div>
+            <div class="slide-subtitle">Wenn der Suchraum das Generationenlimit auffrisst</div>
+        </div>
+        <i class="fa-solid fa-triangle-exclamation fa-2x" style="color: #EF4444;"></i>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div class="card accent-border" style="border-left-color: #EF4444;">
+                <h3><i class="fa-solid fa-chart-line-down"></i> Der Einbruch ab n = 18</h3>
+                <p style="font-size: 16px; line-height: 1.5; color: #475569;">
+                    Bei $n=18$ stürzt die Erfolgsquote schlagartig auf **0,1%** ab (nur ein einziger erfolgreicher Lauf bei 720 Tests).
+                    <br><br>
+                    <b>Der Grund:</b> Der Suchraum explodiert mathematisch mit $2^{n^2}$. Da das Generationenlimit im Versuchsaufbau nur linear mitskalierte, endeten fast alle Läufe exakt <b>eine einzige Dame über dem Optimum</b>.
+                </p>
+            </div>
+            <div class="card">
+                <h3><i class="fa-solid fa-skull-crossbones"></i> Das absolute Limit (n = 22 & n = 25)</h3>
+                <p style="font-size: 16px; line-height: 1.5; color: #475569; margin-bottom: 10px;">
+                    Hier wurde eine **Erfolgsquote von 0%** gemessen, um das mathematisch theoretische Optimum zu erreichen.
+                </p>
+                <ul>
+                    <li class="alert">Der GA findet zwar absolut verlässlich <b>zulässige Lösungen</b> (vollständige Abdeckung aller Felder)...</li>
+                    <li class="alert">... verbleibt jedoch konstant um 1–2 Damen ($n=22$) bzw. 1–3 Damen ($n=25$) über dem Optimum gefangen.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span>Limitationen & Suchraumanalyse</span><span>Folie 9 / 11</span></div>
+</div>
+
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <div class="slide-title">Der Schlüssel-Parameter für große Bretter</div>
+            <div class="slide-subtitle">Unerwartete Verhaltensänderungen bei n = 20</div>
+        </div>
+        <i class="fa-solid fa-key fa-2x" style="color: var(--accent);"></i>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div class="card" style="height: 100%;">
+                <h3><i class="fa-solid fa-biohazard"></i> Der Mutations-Durchbruch</h3>
+                <p style="font-size: 16px; line-height: 1.6; color: #334155;">
+                    Bei schweren Instanzen ($n=20$) bewirkt eine Verdopplung der Mutationsrate von 0,01 auf <b>0,02</b> entscheidende Effekte:
+                </p>
+                <ul style="font-size: 15px; margin-top: 10px;">
+                    <li class="star">Eine **12-fache Steigerung** der Erfolgsquote (von 0,19% auf 2,32%).</li>
+                    <li class="star">Die Konvergenzgeschwindigkeit wird gleichzeitig mehr als **halbiert** (Median sinkt von 1.029 auf 309 Generationen).</li>
+                </ul>
+            </div>
+            <div class="card accent-border" style="border-left-color: var(--accent);">
+                <h3><i class="fa-solid fa-people-arrows"></i> Die Paradoxie der Initialisierung</h3>
+                <p style="font-size: 16px; line-height: 1.5; color: #475569;">
+                    Anders als bei der kleineren Instanz ($n=16$) performen bei $n=20$ Konfigurationen **ohne** Greedy-Anteil plötzlich signifikant besser!
+                    <br><br>
+                    <b>Die Erklärung:</b> Gierig erzeugte Individuen ähneln sich im Erbgut zu stark. Bei riesigen Suchräumen führt diese mangelnde genetische Diversität zu einer unüberwindbaren, frühzeitigen Stagnation.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span>Parameter-Wechselwirkungen</span><span>Folie 10 / 11</span></div>
+</div>
+
+<div class="slide">
+    <div class="slide-header">
+        <div>
+            <div class="slide-title">Kritische Betrachtung & Empfehlungen</div>
+            <div class="slide-subtitle">Lessons Learned aus dem OR-Projekt</div>
+        </div>
+        <i class="fa-solid fa-trophy fa-2x" style="color: var(--accent);"></i>
+    </div>
+    <div class="slide-content">
+        <div class="grid-2">
+            <div>
+                <h3>Stärken & Schwächen</h3>
+                <ul>
+                    <li><b>Mächtige Hybridisierung:</b> Die Kombination aus GA und dem lokalen Reduktionsschritt ist extrem performant. Reine Mutation könnte niemals koordiniert Damen tilgen.</li>
+                    <li class="alert"><b>Stagnationsrisiko:</b> Ohne dynamische Anpassung friert der Algorithmus bei komplexen Dimensionen ein.</li>
+                </ul>
+            </div>
+            <div>
+                <div class="card accent-border" style="background-color: #F8FAFC;">
+                    <h3><i class="fa-solid fa-thumbs-up"></i> Eure finale Konfigurations-Matrix</h3>
+                    <table style="font-size: 14px;">
+                        <thead>
+                            <tr><th>Parameter</th><th>Empfehlung</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><b>Selektion</b></td><td>Tournament ($k=5$) - zwingend</td></tr>
+                            <tr><td><b>Crossover</b></td><td>One-Point Crossover (vollkommen ausreichend)</td></tr>
+                            <tr><td><b>Mutation</b></td><td>$\ge 0,02$ (höhere Raten sichern Diversität)</td></tr>
+                            <tr><td><b>Abbruch</b></td><td>Zusätzlich fixes Stagnationslimit einbauen</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span>Fazit & Ausblick</span><span>Folie 11 / 11</span></div>
+</div>
+
+<script>
+    // Kleines JavaScript für die Steuerung per Tastatur
+    const slides = document.querySelectorAll('.slide');
+    let currentSlide = 0;
+
+    function showSlide(index) {
+        slides[currentSlide].classList.remove('active');
+        currentSlide = (index + slides.length) % slides.length;
+        slides[currentSlide].classList.add('active');
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'ArrowRight' || event.key === ' ') {
+            showSlide(currentSlide + 1);
+        } else if (event.key === 'ArrowLeft') {
+            showSlide(currentSlide - 1);
+        }
+    });
+</script>
 
 </body>
 </html>
